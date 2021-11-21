@@ -44,6 +44,7 @@ func NewAuditMarshaller(w *AuditWriter, eventMin uint16, eventMax uint16, trackM
 		trackMessages: trackMessages,
 		logOutOfOrder: logOOO,
 		maxOutOfOrder: maxOOO,
+		attempts:      0,
 		filters:       make(map[string]map[uint16][]*regexp.Regexp),
 		extraParsers:  extraParsers,
 	}

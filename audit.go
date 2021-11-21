@@ -68,7 +68,7 @@ func loadConfig(configFile string) (*viper.Viper, error) {
 func setRules(config *viper.Viper, e executor) error {
 	// Clear existing rules
 	if err := e("auditctl", "-D"); err != nil {
-		return fmt.Errorf("Failed to flush existing audit rules. Error: %s", err)
+		return fmt.Errorf("failed to flush existing audit rules. Error: %s", err)
 	}
 
 	l.Println("Flushed existing audit rules")
@@ -82,13 +82,13 @@ func setRules(config *viper.Viper, e executor) error {
 			}
 
 			if err := e("auditctl", strings.Fields(v)...); err != nil {
-				return fmt.Errorf("Failed to add rule #%d. Error: %s", i+1, err)
+				return fmt.Errorf("failed to add rule #%d. Error: %s", i+1, err)
 			}
 
 			l.Printf("Added audit rule #%d\n", i+1)
 		}
 	} else {
-		return errors.New("No audit rules found")
+		return errors.New("no audit rules found")
 	}
 
 	return nil
@@ -99,7 +99,7 @@ func createOutput(config *viper.Viper) (*AuditWriter, error) {
 	var err error
 	i := 0
 
-	if config.GetBool("output.syslog.enabled") == true {
+	if config.GetBool("output.syslog.enabled") {
 		i++
 		writer, err = createSyslogOutput(config)
 		if err != nil {
@@ -107,7 +107,7 @@ func createOutput(config *viper.Viper) (*AuditWriter, error) {
 		}
 	}
 
-	if config.GetBool("output.file.enabled") == true {
+	if config.GetBool("output.file.enabled") {
 		i++
 		writer, err = createFileOutput(config)
 		if err != nil {
@@ -117,7 +117,7 @@ func createOutput(config *viper.Viper) (*AuditWriter, error) {
 		go handleLogRotation(config, writer)
 	}
 
-	if config.GetBool("output.stdout.enabled") == true {
+	if config.GetBool("output.stdout.enabled") {
 		i++
 		writer, err = createStdOutOutput(config)
 		if err != nil {
@@ -125,7 +125,7 @@ func createOutput(config *viper.Viper) (*AuditWriter, error) {
 		}
 	}
 
-	if config.GetBool("output.gelf.enabled") == true {
+	if config.GetBool("output.gelf.enabled") {
 		i++
 		writer, err = createGELFOutput(config)
 		if err != nil {
@@ -134,11 +134,11 @@ func createOutput(config *viper.Viper) (*AuditWriter, error) {
 	}
 
 	if i > 1 {
-		return nil, errors.New("Only one output can be enabled at a time")
+		return nil, errors.New("only one output can be enabled at a time")
 	}
 
 	if writer == nil {
-		return nil, errors.New("No outputs were configured")
+		return nil, errors.New("no outputs were configured")
 	}
 
 	return writer, nil
@@ -147,12 +147,12 @@ func createOutput(config *viper.Viper) (*AuditWriter, error) {
 func createGELFOutput(config *viper.Viper) (*AuditWriter, error) {
 	attempts := config.GetInt("output.gelf.attempts")
 	if attempts < 1 {
-		return nil, fmt.Errorf("Output attempts for GELF must be at least 1, %v provided", attempts)
+		return nil, fmt.Errorf("output attempts for GELF must be at least 1, %v provided", attempts)
 	}
 
 	address := config.GetString("output.gelf.address")
 	if address == "" {
-		return nil, fmt.Errorf("Output address for GELF must be set")
+		return nil, fmt.Errorf("output address for GELF must be set")
 	}
 
 	switch config.GetString("output.gelf.network") {
@@ -182,7 +182,7 @@ func createGELFOutput(config *viper.Viper) (*AuditWriter, error) {
 func createSyslogOutput(config *viper.Viper) (*AuditWriter, error) {
 	attempts := config.GetInt("output.syslog.attempts")
 	if attempts < 1 {
-		return nil, fmt.Errorf("Output attempts for syslog must be at least 1, %v provided", attempts)
+		return nil, fmt.Errorf("output attempts for syslog must be at least 1, %v provided", attempts)
 	}
 
 	syslogWriter, err := syslog.Dial(
@@ -193,7 +193,7 @@ func createSyslogOutput(config *viper.Viper) (*AuditWriter, error) {
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to open syslog writer. Error: %v", err)
+		return nil, fmt.Errorf("failed to open syslog writer. Error: %v", err)
 	}
 
 	return NewAuditWriter(syslogWriter, attempts), nil
@@ -202,12 +202,12 @@ func createSyslogOutput(config *viper.Viper) (*AuditWriter, error) {
 func createFileOutput(config *viper.Viper) (*AuditWriter, error) {
 	attempts := config.GetInt("output.file.attempts")
 	if attempts < 1 {
-		return nil, fmt.Errorf("Output attempts for file must be at least 1, %v provided", attempts)
+		return nil, fmt.Errorf("output attempts for file must be at least 1, %v provided", attempts)
 	}
 
 	mode := os.FileMode(config.GetInt("output.file.mode"))
 	if mode < 1 {
-		return nil, errors.New("Output file mode should be greater than 0000")
+		return nil, errors.New("output file mode should be greater than 0000")
 	}
 
 	f, err := os.OpenFile(
@@ -216,37 +216,37 @@ func createFileOutput(config *viper.Viper) (*AuditWriter, error) {
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to open output file. Error: %s", err)
+		return nil, fmt.Errorf("failed to open output file. Error: %s", err)
 	}
 
 	if err := f.Chmod(mode); err != nil {
-		return nil, fmt.Errorf("Failed to set file permissions. Error: %s", err)
+		return nil, fmt.Errorf("failed to set file permissions. Error: %s", err)
 	}
 
 	uname := config.GetString("output.file.user")
 	u, err := user.Lookup(uname)
 	if err != nil {
-		return nil, fmt.Errorf("Could not find uid for user %s. Error: %s", uname, err)
+		return nil, fmt.Errorf("could not find uid for user %s. Error: %s", uname, err)
 	}
 
 	gname := config.GetString("output.file.group")
 	g, err := user.LookupGroup(gname)
 	if err != nil {
-		return nil, fmt.Errorf("Could not find gid for group %s. Error: %s", gname, err)
+		return nil, fmt.Errorf("could not find gid for group %s. Error: %s", gname, err)
 	}
 
 	uid, err := strconv.ParseInt(u.Uid, 10, 32)
 	if err != nil {
-		return nil, fmt.Errorf("Found uid could not be parsed. Error: %s", err)
+		return nil, fmt.Errorf("found uid could not be parsed. Error: %s", err)
 	}
 
 	gid, err := strconv.ParseInt(g.Gid, 10, 32)
 	if err != nil {
-		return nil, fmt.Errorf("Found gid could not be parsed. Error: %s", err)
+		return nil, fmt.Errorf("found gid could not be parsed. Error: %s", err)
 	}
 
 	if err = f.Chown(int(uid), int(gid)); err != nil {
-		return nil, fmt.Errorf("Could not chown output file. Error: %s", err)
+		return nil, fmt.Errorf("could not chown output file. Error: %s", err)
 	}
 
 	return NewAuditWriter(f, attempts), nil
@@ -261,7 +261,7 @@ func handleLogRotation(config *viper.Viper, writer *AuditWriter) {
 	for range sigc {
 		newWriter, err := createFileOutput(config)
 		if err != nil {
-			el.Fatalln("Error re-opening log file. Exiting.")
+			el.Fatalln("error re-opening log file. Exiting.")
 		}
 
 		oldFile := writer.w.(*os.File)
@@ -278,7 +278,7 @@ func handleLogRotation(config *viper.Viper, writer *AuditWriter) {
 func createStdOutOutput(config *viper.Viper) (*AuditWriter, error) {
 	attempts := config.GetInt("output.stdout.attempts")
 	if attempts < 1 {
-		return nil, fmt.Errorf("Output attempts for stdout must be at least 1, %v provided", attempts)
+		return nil, fmt.Errorf("output attempts for stdout must be at least 1, %v provided", attempts)
 	}
 
 	// l logger is no longer stdout
@@ -300,13 +300,13 @@ func createFilters(config *viper.Viper) ([]AuditFilter, error) {
 
 	ft, ok := fs.([]interface{})
 	if !ok {
-		return filters, fmt.Errorf("Could not parse filters object")
+		return filters, fmt.Errorf("could not parse filters object")
 	}
 
 	for i, f := range ft {
 		f2, ok := f.(map[interface{}]interface{})
 		if !ok {
-			return filters, fmt.Errorf("Could not parse filter %d; '%+v'", i+1, f)
+			return filters, fmt.Errorf("could not parse filter %d; '%+v'", i+1, f)
 		}
 
 		af := AuditFilter{}
@@ -349,11 +349,11 @@ func createFilters(config *viper.Viper) ([]AuditFilter, error) {
 		}
 
 		if af.regex == nil {
-			return filters, fmt.Errorf("Filter %d is missing the `regex` entry", i+1)
+			return filters, fmt.Errorf("filter %d is missing the `regex` entry", i+1)
 		}
 
 		if af.messageType == 0 {
-			return filters, fmt.Errorf("Filter %d is missing the `message_type` entry", i+1)
+			return filters, fmt.Errorf("filter %d is missing the `message_type` entry", i+1)
 		}
 
 		filters = append(filters, af)
