@@ -3,10 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"syscall"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNetlinkClient_KeepConnection(t *testing.T) {
@@ -33,7 +34,7 @@ func TestNetlinkClient_KeepConnection(t *testing.T) {
 	defer resetLogger()
 	syscall.Close(n.fd)
 	n.KeepConnection()
-	assert.Equal(t, "", lb.String(), "Got some log lines we did not expect")
+	assert.Equal(t, "", lb.String(), "got some log lines we did not expect")
 	assert.Equal(t, "Error occurred while trying to keep the connection: bad file descriptor\n", elb.String(), "Figured we would have an error")
 }
 
@@ -74,7 +75,7 @@ func TestNetlinkClient_SendReceive(t *testing.T) {
 	// Make sure 0 length packets result in an error
 	syscall.Sendto(n.fd, []byte{}, 0, n.address)
 	_, err = n.Receive()
-	assert.Equal(t, "Got a 0 length packet", err.Error(), "Error was incorrect")
+	assert.Equal(t, "got a 0 length packet", err.Error(), "Error was incorrect")
 
 	// Make sure we get errors from sendto back
 	syscall.Close(n.fd)
@@ -95,7 +96,7 @@ func TestNewNetlinkClient(t *testing.T) {
 
 	assert.Nil(t, err)
 	if n == nil {
-		t.Fatal("Expected a netlink client but had an error instead!")
+		t.Fatal("expected a netlink client but had an error instead!")
 	} else {
 		assert.True(t, (n.fd > 0), "No file descriptor")
 		assert.True(t, (n.address != nil), "Address was nil")
@@ -123,7 +124,7 @@ func makeNelinkClient(t *testing.T) *NetlinkClient {
 
 	if err = syscall.Bind(fd, n.address); err != nil {
 		syscall.Close(fd)
-		t.Fatal("Could not bind to netlink socket:", err)
+		t.Fatal("could not bind to netlink socket:", err)
 	}
 
 	return n
@@ -133,12 +134,12 @@ func makeNelinkClient(t *testing.T) *NetlinkClient {
 func sendReceive(t *testing.T, n *NetlinkClient, packet *NetlinkPacket, payload *AuditStatusPayload) *syscall.NetlinkMessage {
 	err := n.Send(packet, payload)
 	if err != nil {
-		t.Fatal("Failed to send:", err)
+		t.Fatal("failed to send:", err)
 	}
 
 	msg, err := n.Receive()
 	if err != nil {
-		t.Fatal("Failed to receive:", err)
+		t.Fatal("failed to receive:", err)
 	}
 
 	return msg

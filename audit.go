@@ -42,6 +42,7 @@ func loadConfig(configFile string) (*viper.Viper, error) {
 
 	config.SetDefault("events.min", 1300)
 	config.SetDefault("events.max", 1399)
+	config.SetDefault("events.human_readable", false)
 	config.SetDefault("message_tracking.enabled", true)
 	config.SetDefault("message_tracking.log_out_of_order", false)
 	config.SetDefault("message_tracking.max_out_of_order", 500)
@@ -413,6 +414,7 @@ func main() {
 		config.GetBool("message_tracking.log_out_of_order"),
 		config.GetInt("message_tracking.max_out_of_order"),
 		filters,
+		config.GetBool("events.human_readable"),
 		createExtraParsers(config),
 	)
 
