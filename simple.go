@@ -5,38 +5,57 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"strings"
 )
+
+type json_object map[string]interface{}
 
 var DECODE_TYPES = map[string]bool{
 	"proctitle": true,
 	"arch":      true,
 }
 
-func process_group(grp *AuditMessageGroup) (tmp map[string]interface{}, err error) {
+func trimRightFromString(psrc *string, pattern string) (trimmed string) {
+	idx := strings.Index(*psrc, pattern)
+	trimmed = string(*psrc)
+	if idx >= 0 {
+		trimmed = (*psrc)[:idx]
+	}
+	return trimmed
+}
+
+func trimQuotesFromString(psrc *string) (trimmed string) {
+	src := string(*psrc)
+	if len(src) > 1 && src[0] == '"' {
+		src = src[1:]
+	}
+
+	if len(src) > 1 && src[len(src)-1] == '"' {
+		src = src[:len(src)-1]
+	}
+	trimmed = src
+	return trimmed
+
+}
+func process_group(grp *AuditMessageGroup) (tmp json_object, err error) {
 	//var flat_events []*AuditMessage
-	tmp = map[string]interface{}{}
-	tmp["timestamp"] = grp.AuditTime
+	tmp = json_object{}
+	tmp["timestamp"] = trimRightFromString(&grp.AuditTime, ".")
 	//syscall, _ := strconv.Atoi(grp.Syscall)
-	tmp["syscall_id"] = grp.Syscall
+	set_hostname(&tmp)
 	for i := 0; i < len(grp.Msgs); i++ {
 		msg := grp.Msgs[i]
 		parse_kvs(&msg.Data, &tmp)
 		//flat_events = append(flat_events, msg)
 	}
 	// Map auid to username
-	if auid, ok := tmp["auid"]; ok {
-		auid := fmt.Sprintf("%s", auid)
-		if user, ok := grp.UidMap[auid]; ok {
-			tmp["user"] = user
-		}
-	}
-	arch := fmt.Sprintf("%s", tmp["arch_name"])
-	tmp["type"] = SYSCALLS[arch][grp.Syscall]
+	set_username(&tmp, &grp.UidMap)
+	set_syscall_type(&tmp, &grp.Syscall)
 	return tmp, err
 }
 
-func parse_kvs(blob *string, pkvs *map[string]interface{}) (err error) {
+func parse_kvs(blob *string, pkvs *json_object) (err error) {
 	kvs := *pkvs
 	kvs_unparsed := strings.Split(*blob, " ")
 	for i := 0; i < len(kvs_unparsed); i++ {
@@ -51,14 +70,38 @@ func parse_kvs(blob *string, pkvs *map[string]interface{}) (err error) {
 					v, _ = decode_hex_string(&v)
 				}
 			}
-			kvs[k] = strings.ReplaceAll(v, "\"", "")
+			kvs[k] = trimQuotesFromString(&v)
 		}
 		err = nil
 	}
 	return err
 }
 
-func map_arch(data *string, pkvs *map[string]interface{}) (err error) {
+func set_hostname(kvs *json_object) (err error) {
+	(*kvs)["host"], err = os.Hostname()
+	return err
+}
+
+func set_username(pkvs *json_object, puidmap *map[string]string) (err error) {
+	tmp := *pkvs
+	uidmap := *puidmap
+	if auid, err := tmp["auid"]; err {
+		auid := fmt.Sprintf("%s", auid)
+		if user, err := uidmap[auid]; err {
+			tmp["user"] = user
+		}
+	}
+	return err
+}
+
+func set_syscall_type(pkvs *json_object, psyscall_id *string) (err error) {
+	tmp := *pkvs
+	syscall_id := *psyscall_id
+	arch := fmt.Sprintf("%s", tmp["arch_name"])
+	tmp["type"] = SYSCALLS[arch][syscall_id]
+	return err
+}
+func map_arch(data *string, pkvs *json_object) (err error) {
 	arch, _ := decode_hex_int(data)
 	kvs := *pkvs
 	bits := "64"
@@ -86,6 +129,7 @@ func map_arch(data *string, pkvs *map[string]interface{}) (err error) {
 	} else {
 		kvs["arch_name"] = fmt.Sprintf("Unrecognized Archietecture: %d", arch)
 	}
+
 	err = nil
 	return err
 }
