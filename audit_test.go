@@ -65,11 +65,11 @@ func Test_setRules(t *testing.T) {
 		return nil
 	})
 
-	assert.EqualError(t, err, "Failed to flush existing audit rules. Error: testing")
+	assert.EqualError(t, err, "failed to flush existing audit rules. Error: testing")
 
 	// fail on 0 rules
 	err = setRules(config, func(s string, a ...string) error { return nil })
-	assert.EqualError(t, err, "No audit rules found")
+	assert.EqualError(t, err, "no audit rules found")
 
 	// failure to set rule
 	r := 0
@@ -85,7 +85,7 @@ func Test_setRules(t *testing.T) {
 	})
 
 	assert.Equal(t, 1, r, "Wrong number of rule set attempts")
-	assert.EqualError(t, err, "Failed to add rule #1. Error: testing rule")
+	assert.EqualError(t, err, "failed to add rule #1. Error: testing rule")
 
 	// properly set rules
 	r = 0
@@ -111,7 +111,7 @@ func Test_createFileOutput(t *testing.T) {
 	c := viper.New()
 	c.Set("output.file.attempts", 0)
 	w, err := createFileOutput(c)
-	assert.EqualError(t, err, "Output attempts for file must be at least 1, 0 provided")
+	assert.EqualError(t, err, "output attempts for file must be at least 1, 0 provided")
 	assert.Nil(t, w)
 
 	// failure to create/open file
@@ -120,7 +120,7 @@ func Test_createFileOutput(t *testing.T) {
 	c.Set("output.file.path", "/do/not/exist/please")
 	c.Set("output.file.mode", 0644)
 	w, err = createFileOutput(c)
-	assert.EqualError(t, err, "Failed to open output file. Error: open /do/not/exist/please: no such file or directory")
+	assert.EqualError(t, err, "failed to open output file. Error: open /do/not/exist/please: no such file or directory")
 	assert.Nil(t, w)
 
 	// chmod error
@@ -128,7 +128,7 @@ func Test_createFileOutput(t *testing.T) {
 	c.Set("output.file.attempts", 1)
 	c.Set("output.file.path", path.Join(os.TempDir(), "go-audit.test.log"))
 	w, err = createFileOutput(c)
-	assert.EqualError(t, err, "Output file mode should be greater than 0000")
+	assert.EqualError(t, err, "output file mode should be greater than 0000")
 	assert.Nil(t, w)
 
 	// uid error
@@ -137,7 +137,7 @@ func Test_createFileOutput(t *testing.T) {
 	c.Set("output.file.path", path.Join(os.TempDir(), "go-audit.test.log"))
 	c.Set("output.file.mode", 0644)
 	w, err = createFileOutput(c)
-	assert.EqualError(t, err, "Could not find uid for user . Error: user: unknown user ")
+	assert.EqualError(t, err, "could not find uid for user . Error: user: unknown user ")
 	assert.Nil(t, w)
 
 	uid := os.Getuid()
@@ -157,7 +157,7 @@ func Test_createFileOutput(t *testing.T) {
 	c.Set("output.file.mode", 0644)
 	c.Set("output.file.user", u.Username)
 	w, err = createFileOutput(c)
-	assert.EqualError(t, err, "Could not find gid for group . Error: group: unknown group ")
+	assert.EqualError(t, err, "could not find gid for group . Error: group: unknown group ")
 	assert.Nil(t, w)
 
 	// chown error
@@ -168,7 +168,7 @@ func Test_createFileOutput(t *testing.T) {
 	c.Set("output.file.user", "root")
 	c.Set("output.file.group", "root")
 	w, err = createFileOutput(c)
-	assert.EqualError(t, err, "Could not chown output file. Error: chown /tmp/go-audit.test.log: operation not permitted")
+	assert.EqualError(t, err, "could not chown output file. Error: chown /tmp/go-audit.test.log: operation not permitted")
 	assert.Nil(t, w)
 
 	// All good
@@ -189,7 +189,7 @@ func Test_createSyslogOutput(t *testing.T) {
 	c := viper.New()
 	c.Set("output.syslog.attempts", 0)
 	w, err := createSyslogOutput(c)
-	assert.EqualError(t, err, "Output attempts for syslog must be at least 1, 0 provided")
+	assert.EqualError(t, err, "output attempts for syslog must be at least 1, 0 provided")
 	assert.Nil(t, w)
 
 	// dial error
@@ -197,7 +197,7 @@ func Test_createSyslogOutput(t *testing.T) {
 	c.Set("output.syslog.attempts", 1)
 	c.Set("output.syslog.priority", -1)
 	w, err = createSyslogOutput(c)
-	assert.EqualError(t, err, "Failed to open syslog writer. Error: log/syslog: invalid priority")
+	assert.EqualError(t, err, "failed to open syslog writer. Error: log/syslog: invalid priority")
 	assert.Nil(t, w)
 
 	// All good
@@ -223,7 +223,7 @@ func Test_createStdOutOutput(t *testing.T) {
 	c := viper.New()
 	c.Set("output.stdout.attempts", 0)
 	w, err := createStdOutOutput(c)
-	assert.EqualError(t, err, "Output attempts for stdout must be at least 1, 0 provided")
+	assert.EqualError(t, err, "output attempts for stdout must be at least 1, 0 provided")
 	assert.Nil(t, w)
 
 	// All good
@@ -240,7 +240,7 @@ func Test_createGELFOutput(t *testing.T) {
 		c := viper.New()
 		c.Set("output.gelf.attempts", 0)
 		w, err := createGELFOutput(c)
-		assert.EqualError(t, err, "Output attempts for GELF must be at least 1, 0 provided")
+		assert.EqualError(t, err, "output attempts for GELF must be at least 1, 0 provided")
 		assert.Nil(t, w)
 	})
 
@@ -248,7 +248,7 @@ func Test_createGELFOutput(t *testing.T) {
 		c := viper.New()
 		c.Set("output.gelf.attempts", 3)
 		w, err := createGELFOutput(c)
-		assert.EqualError(t, err, "Output address for GELF must be set")
+		assert.EqualError(t, err, "output address for GELF must be set")
 		assert.Nil(t, w)
 	})
 
@@ -323,7 +323,7 @@ func Test_createOutput(t *testing.T) {
 	// no outputs
 	c := viper.New()
 	w, err := createOutput(c)
-	assert.EqualError(t, err, "No outputs were configured")
+	assert.EqualError(t, err, "no outputs were configured")
 	assert.Nil(t, w)
 
 	// multiple outputs
@@ -358,7 +358,7 @@ func Test_createOutput(t *testing.T) {
 	c.Set("output.file.group", g.Name)
 
 	w, err = createOutput(c)
-	assert.EqualError(t, err, "Only one output can be enabled at a time")
+	assert.EqualError(t, err, "only one output can be enabled at a time")
 	assert.Nil(t, w)
 
 	// syslog error
@@ -366,7 +366,7 @@ func Test_createOutput(t *testing.T) {
 	c.Set("output.syslog.enabled", true)
 	c.Set("output.syslog.attempts", 0)
 	w, err = createOutput(c)
-	assert.EqualError(t, err, "Output attempts for syslog must be at least 1, 0 provided")
+	assert.EqualError(t, err, "output attempts for syslog must be at least 1, 0 provided")
 	assert.Nil(t, w)
 
 	// file error
@@ -374,7 +374,7 @@ func Test_createOutput(t *testing.T) {
 	c.Set("output.file.enabled", true)
 	c.Set("output.file.attempts", 0)
 	w, err = createOutput(c)
-	assert.EqualError(t, err, "Output attempts for file must be at least 1, 0 provided")
+	assert.EqualError(t, err, "output attempts for file must be at least 1, 0 provided")
 	assert.Nil(t, w)
 
 	// stdout error
@@ -382,7 +382,7 @@ func Test_createOutput(t *testing.T) {
 	c.Set("output.stdout.enabled", true)
 	c.Set("output.stdout.attempts", 0)
 	w, err = createOutput(c)
-	assert.EqualError(t, err, "Output attempts for stdout must be at least 1, 0 provided")
+	assert.EqualError(t, err, "output attempts for stdout must be at least 1, 0 provided")
 	assert.Nil(t, w)
 
 	// All good syslog
@@ -433,7 +433,7 @@ func Test_createFilters(t *testing.T) {
 	c = viper.New()
 	c.Set("filters", 1)
 	f, err = createFilters(c)
-	assert.EqualError(t, err, "Could not parse filters object")
+	assert.EqualError(t, err, "could not parse filters object")
 	assert.Empty(t, f)
 
 	// Bad inner filter value
@@ -442,7 +442,7 @@ func Test_createFilters(t *testing.T) {
 	rf = append(rf, "bad filter definition")
 	c.Set("filters", rf)
 	f, err = createFilters(c)
-	assert.EqualError(t, err, "Could not parse filter 1; 'bad filter definition'")
+	assert.EqualError(t, err, "could not parse filter 1; 'bad filter definition'")
 	assert.Empty(t, f)
 
 	// Bad message type - string
@@ -496,7 +496,7 @@ func Test_createFilters(t *testing.T) {
 	rf = append(rf, map[interface{}]interface{}{"syscall": "1", "message_type": "1"})
 	c.Set("filters", rf)
 	f, err = createFilters(c)
-	assert.EqualError(t, err, "Filter 1 is missing the `regex` entry")
+	assert.EqualError(t, err, "filter 1 is missing the `regex` entry")
 	assert.Empty(t, f)
 
 	// Missing message_type
@@ -505,7 +505,7 @@ func Test_createFilters(t *testing.T) {
 	rf = append(rf, map[interface{}]interface{}{"syscall": "1", "regex": "1"})
 	c.Set("filters", rf)
 	f, err = createFilters(c)
-	assert.EqualError(t, err, "Filter 1 is missing the `message_type` entry")
+	assert.EqualError(t, err, "filter 1 is missing the `message_type` entry")
 	assert.Empty(t, f)
 
 	// Good with strings
@@ -540,7 +540,7 @@ func Test_createFilters(t *testing.T) {
 }
 
 func Benchmark_MultiPacketMessage(b *testing.B) {
-	marshaller := NewAuditMarshaller(NewAuditWriter(&noopWriter{}, 1), uint16(1300), uint16(1399), false, false, 1, []AuditFilter{}, nil)
+	marshaller := NewAuditMarshaller(NewAuditWriter(&noopWriter{}, 1), uint16(1300), uint16(1399), false, false, 1, []AuditFilter{}, false, nil)
 
 	data := make([][]byte, 6)
 

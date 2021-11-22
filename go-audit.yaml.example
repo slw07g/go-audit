@@ -11,6 +11,8 @@ events:
   min: 1300
   # Maximum event type to capture, default 1399
   max: 1399
+  # Make events human readable
+  human_readable: true
 
 # Configure message sequence tracking
 message_tracking:
