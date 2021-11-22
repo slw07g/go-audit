@@ -41,15 +41,25 @@ func trimQuotesFromString(psrc *string) (trimmed string) {
 func process_group(grp *AuditMessageGroup) (tmp json_map, err error) {
 	tmp = json_map{}
 	tmp["timestamp"] = trimRightFromString(&grp.AuditTime, ".")
-
+	args := json_map{} // execve args
 	for i := 0; i < len(grp.Msgs); i++ {
 		msg := grp.Msgs[i]
 		if AUDITD_EVENT_TYPES[msg.Type] == "execve" {
-			args := json_map{}
 			parse_kvs(&msg.Data, &args)
 			tmp["args"] = args
 		} else {
 			parse_kvs(&msg.Data, &tmp)
+		}
+
+		if AUDITD_EVENT_TYPES[msg.Type] == "syscall" {
+			for i := 0; i < 4; i++ {
+				delete(tmp, fmt.Sprintf("a%d", i))
+			}
+			if session, ok := (tmp["ses"]).(string); ok {
+				tmp["session"] = session
+				delete(tmp, "ses")
+			}
+
 		}
 	}
 	set_hostname(&tmp)
@@ -88,12 +98,16 @@ func set_hostname(kvs *json_map) (err error) {
 func set_username(pkvs *json_map, puidmap *map[string]string) (err error) {
 	tmp := *pkvs
 	uidmap := *puidmap
-	if auid, err := tmp["auid"]; err {
-		auid := fmt.Sprintf("%s", auid)
-		if user, err := uidmap[auid]; err {
-			tmp["user"] = user
-		}
+	var ok bool
+	var user string
+	var auid string
+	if auid, ok = tmp["auid"].(string); ok {
+		user, ok = uidmap[auid]
 	}
+	if !ok {
+		user = ""
+	}
+	tmp["user"] = user
 	return err
 }
 
