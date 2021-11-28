@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"os"
 	"strings"
 )
 
@@ -75,7 +74,6 @@ func process_group(grp *AuditMessageGroup) (tmp json_map, err error) {
 		tmp["paths"] = paths_list
 		tmp["paths_info"] = paths_map
 	}
-	//set_hostname(&tmp) // Hostname now set in Marshaller
 	set_username(&tmp, &grp.UidMap)
 	set_syscall_type(&tmp, &grp.Syscall)
 	return tmp, err
@@ -100,11 +98,6 @@ func parse_kvs(blob *string, pkvs *json_map) (err error) {
 		}
 		err = nil
 	}
-	return err
-}
-
-func set_hostname(kvs *json_map) (err error) {
-	(*kvs)["host"], err = os.Hostname()
 	return err
 }
 
