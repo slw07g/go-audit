@@ -25,6 +25,7 @@ type AuditMarshaller struct {
 	attempts      int
 	filters       map[string]map[uint16][]*regexp.Regexp // { syscall: { mtype: [regexp, ...] } }
 	humanReadable bool
+	hostname      string
 	extraParsers  ExtraParsers
 }
 
@@ -35,7 +36,7 @@ type AuditFilter struct {
 }
 
 // Create a new marshaller
-func NewAuditMarshaller(w *AuditWriter, eventMin uint16, eventMax uint16, trackMessages, logOOO bool, maxOOO int, filters []AuditFilter, humanReadable bool, extraParsers ExtraParsers) *AuditMarshaller {
+func NewAuditMarshaller(w *AuditWriter, eventMin uint16, eventMax uint16, trackMessages, logOOO bool, maxOOO int, filters []AuditFilter, humanReadable bool, hostname string, extraParsers ExtraParsers) *AuditMarshaller {
 	am := AuditMarshaller{
 		writer:        w,
 		msgs:          make(map[int]*AuditMessageGroup, 5), // It is not typical to have more than 2 message groups at any given time
@@ -48,6 +49,7 @@ func NewAuditMarshaller(w *AuditWriter, eventMin uint16, eventMax uint16, trackM
 		attempts:      0,
 		filters:       make(map[string]map[uint16][]*regexp.Regexp),
 		humanReadable: humanReadable,
+		hostname:      hostname,
 		extraParsers:  extraParsers,
 	}
 
@@ -128,6 +130,7 @@ func (a *AuditMarshaller) completeMessage(seq int) {
 		return
 	}
 
+	(*msg).Hostname = a.hostname
 	if err := a.writer.Write(msg, a.humanReadable); err != nil {
 		el.Println("Failed to write message. Error:", err)
 		os.Exit(1)

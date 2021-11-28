@@ -36,6 +36,7 @@ type AuditMessageGroup struct {
 	Msgs          []*AuditMessage   `json:"messages"`
 	UidMap        map[string]string `json:"uid_map"`
 	Syscall       string            `json:"-"`
+	Hostname      string            `json:"host"`
 }
 
 // Creates a new message group from the details parsed from the message

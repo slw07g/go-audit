@@ -540,7 +540,7 @@ func Test_createFilters(t *testing.T) {
 }
 
 func Benchmark_MultiPacketMessage(b *testing.B) {
-	marshaller := NewAuditMarshaller(NewAuditWriter(&noopWriter{}, 1), uint16(1300), uint16(1399), false, false, 1, []AuditFilter{}, false, nil)
+	marshaller := NewAuditMarshaller(NewAuditWriter(&noopWriter{}, 1), uint16(1300), uint16(1399), false, false, 1, []AuditFilter{}, false, "host", nil)
 
 	data := make([][]byte, 6)
 

@@ -26,15 +26,14 @@ func trimRightFromString(psrc *string, pattern string) (trimmed string) {
 }
 
 func trimQuotesFromString(psrc *string) (trimmed string) {
-	src := string(*psrc)
-	if len(src) > 1 && src[0] == '"' {
-		src = src[1:]
+	trimmed = string(*psrc)
+	if len(trimmed) > 1 && trimmed[0] == '"' {
+		trimmed = trimmed[1:]
 	}
 
-	if len(src) > 1 && src[len(src)-1] == '"' {
-		src = src[:len(src)-1]
+	if len(trimmed) > 1 && trimmed[len(trimmed)-1] == '"' {
+		trimmed = trimmed[:len(trimmed)-1]
 	}
-	trimmed = src
 	return trimmed
 
 }
@@ -42,6 +41,8 @@ func process_group(grp *AuditMessageGroup) (tmp json_map, err error) {
 	tmp = json_map{}
 	tmp["timestamp"] = trimRightFromString(&grp.AuditTime, ".")
 	args := json_map{} // execve args
+	paths_list := []string{}
+	paths_map := json_map{}
 	for i := 0; i < len(grp.Msgs); i++ {
 		msg := grp.Msgs[i]
 		if AUDITD_EVENT_TYPES[msg.Type] == "execve" {
@@ -59,10 +60,22 @@ func process_group(grp *AuditMessageGroup) (tmp json_map, err error) {
 				tmp["session"] = session
 				delete(tmp, "ses")
 			}
+		}
 
+		if AUDITD_EVENT_TYPES[msg.Type] == "path" {
+			tmp_kvs := json_map{}
+			parse_kvs(&msg.Data, &tmp_kvs)
+			paths_list = append(paths_list, tmp_kvs["name"].(string))
+			paths_map[tmp_kvs["item"].(string)] = tmp_kvs
 		}
 	}
-	set_hostname(&tmp)
+
+	// Set paths, paths_info if any path messages were processed
+	if len(paths_map) > 0 {
+		tmp["paths"] = paths_list
+		tmp["paths_info"] = paths_map
+	}
+	//set_hostname(&tmp) // Hostname now set in Marshaller
 	set_username(&tmp, &grp.UidMap)
 	set_syscall_type(&tmp, &grp.Syscall)
 	return tmp, err
@@ -114,7 +127,7 @@ func set_username(pkvs *json_map, puidmap *map[string]string) (err error) {
 func set_syscall_type(pkvs *json_map, psyscall_id *string) (err error) {
 	tmp := *pkvs
 	syscall_id := *psyscall_id
-	arch := fmt.Sprintf("%s", tmp["arch_name"])
+	arch := tmp["arch_name"].(string)
 	tmp["type"] = SYSCALLS[arch][syscall_id]
 	return err
 }
