@@ -23,8 +23,7 @@ func NewAuditWriter(w io.Writer, attempts int) *AuditWriter {
 func (a *AuditWriter) Write(msg *AuditMessageGroup, human_readable bool) (err error) {
 	for i := 0; i < a.attempts; i++ {
 		if human_readable {
-			var readable_msgs map[string]interface{}
-			readable_msgs, _ = process_group(msg)
+			readable_msgs, _ := process_group(msg)
 			err = a.e.Encode(readable_msgs)
 		} else {
 			err = a.e.Encode(msg)
