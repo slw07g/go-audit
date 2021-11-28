@@ -3,7 +3,10 @@
 [![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](http://opensource.org/licenses/MIT)
 
 ## About
-
+This fork of go-audit has been slightly re-factored to transform the go-audit JSON into a simpler, human readable JSON.
+To enable this logging, set `human_readable` to true in the `events` section of the go-audit.yaml file. 
+The example conf in this repo already has it enabled.
+ 
 go-audit is an alternative to the auditd daemon that ships with many distros.
 After having created an [auditd audisp](https://people.redhat.com/sgrubb/audit/) plugin to convert audit logs to json, 
 I became interested in creating a replacement for the existing daemon.
