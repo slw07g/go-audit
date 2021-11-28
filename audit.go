@@ -406,6 +406,11 @@ func main() {
 		el.Fatal(err)
 	}
 
+	hostname, err := os.Hostname()
+	if err != nil {
+		el.Fatal(err)
+	}
+
 	marshaller := NewAuditMarshaller(
 		writer,
 		uint16(config.GetInt("events.min")),
@@ -415,6 +420,7 @@ func main() {
 		config.GetInt("message_tracking.max_out_of_order"),
 		filters,
 		config.GetBool("events.human_readable"),
+		hostname,
 		createExtraParsers(config),
 	)
 
