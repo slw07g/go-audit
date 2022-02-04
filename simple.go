@@ -120,8 +120,14 @@ func set_username(pkvs *json_map, puidmap *map[string]string) (err error) {
 func set_syscall_type(pkvs *json_map, psyscall_id *string) (err error) {
 	tmp := *pkvs
 	syscall_id := *psyscall_id
-	arch := tmp["arch_name"].(string)
-	tmp["type"] = SYSCALLS[arch][syscall_id]
+	var arch string
+	var ok bool
+	if arch, ok = tmp["arch_name"].(string); ok {
+		tmp["type"] = SYSCALLS[arch][syscall_id]
+	}
+	if !ok {
+		tmp["type"] = "UNKNOWN"
+	}
 	return err
 }
 func map_arch(data *string, pkvs *json_map) (err error) {
