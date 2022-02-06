@@ -45,6 +45,7 @@ func process_group(grp *AuditMessageGroup) (tmp json_map, err error) {
 	paths_map := json_map{}
 	tmp["hostname"], _ = os.Hostname()
 	for i := 0; i < len(grp.Msgs); i++ {
+		msg, _ := grp.Msgs[i]
 		if AUDITD_EVENT_TYPES[msg.Type] == "execve" {
 			parse_kvs(&msg.Data, &args)
 			tmp["args"] = args
