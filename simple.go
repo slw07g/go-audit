@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -42,8 +43,10 @@ func process_group(grp *AuditMessageGroup) (tmp json_map, err error) {
 	args := json_map{} // execve args
 	paths_list := []string{}
 	paths_map := json_map{}
+	hostname, _ := os.Hostname()
 	for i := 0; i < len(grp.Msgs); i++ {
 		msg := grp.Msgs[i]
+		msg["hostname"] = hostname
 		if AUDITD_EVENT_TYPES[msg.Type] == "execve" {
 			parse_kvs(&msg.Data, &args)
 			tmp["args"] = args
