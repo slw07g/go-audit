@@ -110,7 +110,11 @@ func set_username(pkvs *json_map, puidmap *map[string]string) (err error) {
 	var user string
 	var auid string
 	if auid, ok = tmp["auid"].(string); ok {
+		if auid == "4294967295" {
+			auid, ok = tmp["uid"].(string)
+		}
 		user, ok = uidmap[auid]
+
 	}
 	if !ok {
 		user = ""
